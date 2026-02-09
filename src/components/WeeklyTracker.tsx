@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-import { LayoutDashboard, FileEdit, TrendingUp, Info, Loader2 } from "lucide-react";
+import { LayoutDashboard, FileEdit, TrendingUp, Info, Loader2, LogOut } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { Button } from "@/components/ui/button";
 
 export interface WeeklyActual {
     id?: string;
@@ -32,6 +34,7 @@ export interface WeeklyActual {
 }
 
 export default function WeeklyTracker() {
+    const { logout } = useAuth();
     const [activeTab, setActiveTab] = useState<"entry" | "dashboard">("entry");
     const [selectedWeek, setSelectedWeek] = useState<number>(1);
     const [allActuals, setAllActuals] = useState<WeeklyActual[]>([]);
@@ -91,31 +94,41 @@ export default function WeeklyTracker() {
                         <h1 className="text-3xl font-bold tracking-tight text-neutral-900">Weekly Performance Tracker</h1>
                         <div className="flex items-center gap-2">
                             <p className="text-neutral-500 text-lg">Detailed KPI tracking across programs and regions.</p>
-                            {isPending && <Loader2 className="animate-spin text-blue-500 w-4 h-4" />}
+                            {isPending && <Loader2 className="animate-spin text-primary w-4 h-4" />}
                         </div>
                     </div>
-                    <div className="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-neutral-200">
-                        <button
-                            onClick={() => setActiveTab("entry")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "entry" ? "bg-blue-600 text-white shadow-md font-medium" : "text-neutral-600 hover:bg-neutral-100"}`}
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 bg-white p-2 rounded-xl shadow-sm border border-neutral-200">
+                            <button
+                                onClick={() => setActiveTab("entry")}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "entry" ? "bg-primary text-white shadow-md font-medium" : "text-neutral-600 hover:bg-neutral-100"}`}
+                            >
+                                <FileEdit size={18} />
+                                <span>Data Entry</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("dashboard")}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "dashboard" ? "bg-primary text-white shadow-md font-medium" : "text-neutral-600 hover:bg-neutral-100"}`}
+                            >
+                                <LayoutDashboard size={18} />
+                                <span>Dashboard</span>
+                            </button>
+                        </div>
+                        <Button
+                            variant="outline"
+                            className="bg-white border-neutral-200 text-neutral-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all rounded-xl"
+                            onClick={logout}
                         >
-                            <FileEdit size={18} />
-                            <span>Data Entry</span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("dashboard")}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === "dashboard" ? "bg-blue-600 text-white shadow-md font-medium" : "text-neutral-600 hover:bg-neutral-100"}`}
-                        >
-                            <LayoutDashboard size={18} />
-                            <span>Dashboard</span>
-                        </button>
+                            <LogOut size={18} className="mr-2" />
+                            Sign Out
+                        </Button>
                     </div>
                 </div>
 
                 {isLoading ? (
                     <Card className="flex items-center justify-center p-20 border-dashed">
                         <div className="flex flex-col items-center gap-4">
-                            <Loader2 className="animate-spin text-blue-600 w-8 h-8" />
+                            <Loader2 className="animate-spin text-primary w-8 h-8" />
                             <p className="text-neutral-500 animate-pulse">Connecting to MongoDB Atlas...</p>
                         </div>
                     </Card>
@@ -126,8 +139,8 @@ export default function WeeklyTracker() {
                             <CardContent className="pt-6">
                                 <div className="flex items-center gap-4">
                                     <span className="font-semibold text-neutral-700">Displaying Data for:</span>
-                                    <Select value={selectedWeek.toString()} onValueChange={(v) => setSelectedWeek(parseInt(v))}>
-                                        <SelectTrigger className="w-[180px] bg-white border-neutral-200 focus:ring-blue-500">
+                                    <Select value={selectedWeek.toString()} onValueChange={(v: string) => setSelectedWeek(parseInt(v))}>
+                                        <SelectTrigger className="w-[180px] bg-white border-neutral-200 focus:ring-primary">
                                             <SelectValue placeholder="Select Week" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -157,7 +170,14 @@ export default function WeeklyTracker() {
     );
 }
 
-function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumulativeActual }: any) {
+interface EntryTableProps {
+    selectedWeek: number;
+    handleActualChange: (kpiId: string, regionName: string, value: string) => Promise<void>;
+    getActualValue: (kpiId: string, regionName: string) => string;
+    getCumulativeActual: (kpiId: string, regionName: string) => number;
+}
+
+function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumulativeActual }: EntryTableProps) {
     return (
         <Card className="overflow-hidden border-neutral-200 shadow-xl">
             <div className="overflow-x-auto">
@@ -168,7 +188,7 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                             <TableHead className="w-[150px] text-white">REGION</TableHead>
                             <TableHead className="text-right text-white bg-neutral-800">ANNUAL GOAL</TableHead>
                             <TableHead className="text-right text-white">TARGET (WK {selectedWeek})</TableHead>
-                            <TableHead className="text-right text-white ring-2 ring-blue-500 ring-inset">ACTUAL (WK {selectedWeek})</TableHead>
+                            <TableHead className="text-right text-white ring-2 ring-primary ring-inset">ACTUAL (WK {selectedWeek})</TableHead>
                             <TableHead className="text-right text-white">% ACHIEVED</TableHead>
                             <TableHead className="text-right text-white">VARIANCE</TableHead>
                             <TableHead className="text-right text-white bg-neutral-800">CUM. BUDGET</TableHead>
@@ -188,14 +208,14 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                                 <React.Fragment key={kpi.id}>
                                     {/* Parent KPI Header & Annual Goal */}
                                     <TableRow className="bg-neutral-100/50">
-                                        <TableCell className="font-bold text-neutral-900 border-l-4 border-blue-600">
+                                        <TableCell className="font-bold text-neutral-900 border-l-4 border-primary">
                                             <div className="flex flex-col">
-                                                <span className="text-[10px] uppercase text-blue-600 font-bold tracking-widest">{kpi.category}</span>
+                                                <span className="text-[10px] uppercase text-primary font-bold tracking-widest">{kpi.category}</span>
                                                 <span className="truncate">{kpi.name}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-neutral-400 italic">Annual Total</TableCell>
-                                        <TableCell className="text-right font-black text-blue-900 bg-neutral-100">
+                                        <TableCell className="text-right font-black text-primary bg-neutral-100">
                                             {kpi.unit === "currency" ? `$${kpi.annualGoal.toLocaleString()}` : kpi.annualGoal.toLocaleString()}
                                         </TableCell>
                                         <TableCell colSpan={6}></TableCell>
@@ -222,7 +242,7 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                                                         {kpi.unit === "currency" && <span className="mr-1 text-neutral-400">$</span>}
                                                         <Input
                                                             type="number"
-                                                            className="w-24 text-right font-bold border-blue-200 focus-visible:ring-blue-500"
+                                                            className="w-24 text-right font-bold border-primary/20 focus-visible:ring-primary"
                                                             value={getActualValue(kpi.id, region.name)}
                                                             onChange={(e) => handleActualChange(kpi.id, region.name, e.target.value)}
                                                             placeholder="0"
@@ -248,14 +268,14 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                                     })}
 
                                     {/* KPI Total Row */}
-                                    <TableRow className="bg-blue-50 font-bold border-y-2 border-blue-100">
-                                        <TableCell className="text-blue-900 italic">Total {kpi.name}</TableCell>
+                                    <TableRow className="bg-primary/5 font-bold border-y-2 border-primary/10">
+                                        <TableCell className="text-primary italic">Total {kpi.name}</TableCell>
                                         <TableCell></TableCell>
-                                        <TableCell className="bg-blue-100/50"></TableCell>
+                                        <TableCell className="bg-primary/5"></TableCell>
                                         <TableCell className="text-right">
                                             {kpi.unit === "currency" ? `$${kpiTotalTarget.toLocaleString()}` : kpiTotalTarget}
                                         </TableCell>
-                                        <TableCell className="text-right border-x-2 border-blue-200">
+                                        <TableCell className="text-right border-x-2 border-primary/10">
                                             {kpi.unit === "currency" ? `$${kpiTotalActual.toLocaleString()}` : kpiTotalActual}
                                         </TableCell>
                                         <TableCell className={`text-right ${kpiAchieved >= 100 ? "text-emerald-600" : "text-rose-600"}`}>
@@ -266,10 +286,10 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                                                 ? (kpiVariance >= 0 ? `+$${kpiVariance.toLocaleString()}` : `-$${Math.abs(kpiVariance).toLocaleString()}`)
                                                 : (kpiVariance > 0 ? `+${kpiVariance}` : kpiVariance)}
                                         </TableCell>
-                                        <TableCell className="text-right bg-blue-100/30">
+                                        <TableCell className="text-right bg-primary/5">
                                             {kpi.unit === "currency" ? `$${kpiTotalCumBudget.toLocaleString()}` : kpiTotalCumBudget.toLocaleString()}
                                         </TableCell>
-                                        <TableCell className="text-right bg-blue-100/30">
+                                        <TableCell className="text-right bg-primary/5">
                                             {kpi.unit === "currency" ? `$${kpiTotalCumActual.toLocaleString()}` : kpiTotalCumActual.toLocaleString()}
                                         </TableCell>
                                     </TableRow>
@@ -314,7 +334,7 @@ function Dashboard({ week, allActuals }: { week: number, allActuals: WeeklyActua
             <Card className="md:col-span-2 border-neutral-200 shadow-md">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <TrendingUp className="text-blue-600" />
+                        <TrendingUp className="text-primary" />
                         Performance Trend
                     </CardTitle>
                 </CardHeader>
@@ -326,9 +346,9 @@ function Dashboard({ week, allActuals }: { week: number, allActuals: WeeklyActua
                             <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => value.toLocaleString()} />
                             <Tooltip
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                formatter={(value: any) => [value.toLocaleString(), "Value"]}
+                                formatter={(value: number | string | undefined) => [value?.toLocaleString() || "0", "Value"]}
                             />
-                            <Line type="monotone" dataKey="actual" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb' }} />
+                            <Line type="monotone" dataKey="actual" stroke="#CC6328" strokeWidth={3} dot={{ r: 4, fill: '#CC6328' }} />
                             <Line type="monotone" dataKey="target" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                         </LineChart>
                     </ResponsiveContainer>
@@ -351,9 +371,9 @@ function Dashboard({ week, allActuals }: { week: number, allActuals: WeeklyActua
                             <Tooltip
                                 cursor={{ fill: '#f8fafc' }}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                                formatter={(value: any) => [value.toLocaleString(), "Value"]}
+                                formatter={(value: number | string | undefined) => [value?.toLocaleString() || "0", "Value"]}
                             />
-                            <Bar dataKey="actual" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={20} />
+                            <Bar dataKey="actual" fill="#CC6328" radius={[0, 4, 4, 0]} barSize={20} />
                         </BarChart>
                     </ResponsiveContainer>
                 </CardContent>
@@ -367,9 +387,9 @@ function Dashboard({ week, allActuals }: { week: number, allActuals: WeeklyActua
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
-                        <p className="text-sm font-medium text-blue-800">Total Progress</p>
-                        <p className="text-2xl font-bold text-blue-900">
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                        <p className="text-sm font-medium text-primary">Total Progress</p>
+                        <p className="text-2xl font-bold text-primary">
                             {weeklyPerformance[week - 1]?.actual.toLocaleString() || 0} / {weeklyPerformance[week - 1]?.target.toLocaleString() || 0}
                         </p>
                     </div>
