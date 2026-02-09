@@ -196,7 +196,7 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                                         </TableCell>
                                         <TableCell className="text-neutral-400 italic">Annual Total</TableCell>
                                         <TableCell className="text-right font-black text-blue-900 bg-neutral-100">
-                                            {kpi.annualGoal.toLocaleString()}
+                                            {kpi.unit === "currency" ? `$${kpi.annualGoal.toLocaleString()}` : kpi.annualGoal.toLocaleString()}
                                         </TableCell>
                                         <TableCell colSpan={6}></TableCell>
                                     </TableRow>
@@ -214,27 +214,34 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                                                 <TableCell></TableCell>
                                                 <TableCell className="text-neutral-600 pl-4">{region.name}</TableCell>
                                                 <TableCell className="bg-neutral-50/30"></TableCell>
-                                                <TableCell className="text-right font-medium">{region.target}</TableCell>
+                                                <TableCell className="text-right font-medium">
+                                                    {kpi.unit === "currency" ? `$${region.target.toLocaleString()}` : region.target}
+                                                </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Input
-                                                        type="number"
-                                                        className="w-24 ml-auto text-right font-bold border-blue-200 focus-visible:ring-blue-500"
-                                                        value={getActualValue(kpi.id, region.name)}
-                                                        onChange={(e) => handleActualChange(kpi.id, region.name, e.target.value)}
-                                                        placeholder="0"
-                                                    />
+                                                    <div className="flex items-center justify-end">
+                                                        {kpi.unit === "currency" && <span className="mr-1 text-neutral-400">$</span>}
+                                                        <Input
+                                                            type="number"
+                                                            className="w-24 text-right font-bold border-blue-200 focus-visible:ring-blue-500"
+                                                            value={getActualValue(kpi.id, region.name)}
+                                                            onChange={(e) => handleActualChange(kpi.id, region.name, e.target.value)}
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
                                                 </TableCell>
                                                 <TableCell className={`text-right font-semibold ${achieved >= 100 ? "text-emerald-600" : achieved >= 50 ? "text-amber-600" : "text-rose-600"}`}>
                                                     {achieved.toFixed(0)}%
                                                 </TableCell>
                                                 <TableCell className={`text-right font-medium ${variance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                                                    {variance > 0 ? `+${variance.toFixed(2)}` : variance.toFixed(2)}
+                                                    {kpi.unit === "currency"
+                                                        ? (variance >= 0 ? `+$${variance.toLocaleString()}` : `-$${Math.abs(variance).toLocaleString()}`)
+                                                        : (variance > 0 ? `+${variance.toFixed(2)}` : variance.toFixed(2))}
                                                 </TableCell>
                                                 <TableCell className="text-right bg-neutral-50 font-medium text-neutral-500">
-                                                    {cumBudget.toLocaleString()}
+                                                    {kpi.unit === "currency" ? `$${cumBudget.toLocaleString()}` : cumBudget.toLocaleString()}
                                                 </TableCell>
                                                 <TableCell className="text-right bg-neutral-50 font-bold text-neutral-900">
-                                                    {cumActual.toLocaleString()}
+                                                    {kpi.unit === "currency" ? `$${cumActual.toLocaleString()}` : cumActual.toLocaleString()}
                                                 </TableCell>
                                             </TableRow>
                                         );
@@ -245,16 +252,26 @@ function EntryTable({ selectedWeek, handleActualChange, getActualValue, getCumul
                                         <TableCell className="text-blue-900 italic">Total {kpi.name}</TableCell>
                                         <TableCell></TableCell>
                                         <TableCell className="bg-blue-100/50"></TableCell>
-                                        <TableCell className="text-right">{kpiTotalTarget}</TableCell>
-                                        <TableCell className="text-right border-x-2 border-blue-200">{kpiTotalActual}</TableCell>
+                                        <TableCell className="text-right">
+                                            {kpi.unit === "currency" ? `$${kpiTotalTarget.toLocaleString()}` : kpiTotalTarget}
+                                        </TableCell>
+                                        <TableCell className="text-right border-x-2 border-blue-200">
+                                            {kpi.unit === "currency" ? `$${kpiTotalActual.toLocaleString()}` : kpiTotalActual}
+                                        </TableCell>
                                         <TableCell className={`text-right ${kpiAchieved >= 100 ? "text-emerald-600" : "text-rose-600"}`}>
                                             {kpiAchieved.toFixed(0)}%
                                         </TableCell>
                                         <TableCell className={`text-right ${kpiVariance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                                            {kpiVariance > 0 ? `+${kpiVariance}` : kpiVariance}
+                                            {kpi.unit === "currency"
+                                                ? (kpiVariance >= 0 ? `+$${kpiVariance.toLocaleString()}` : `-$${Math.abs(kpiVariance).toLocaleString()}`)
+                                                : (kpiVariance > 0 ? `+${kpiVariance}` : kpiVariance)}
                                         </TableCell>
-                                        <TableCell className="text-right bg-blue-100/30">{kpiTotalCumBudget.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right bg-blue-100/30">{kpiTotalCumActual.toLocaleString()}</TableCell>
+                                        <TableCell className="text-right bg-blue-100/30">
+                                            {kpi.unit === "currency" ? `$${kpiTotalCumBudget.toLocaleString()}` : kpiTotalCumBudget.toLocaleString()}
+                                        </TableCell>
+                                        <TableCell className="text-right bg-blue-100/30">
+                                            {kpi.unit === "currency" ? `$${kpiTotalCumActual.toLocaleString()}` : kpiTotalCumActual.toLocaleString()}
+                                        </TableCell>
                                     </TableRow>
 
                                     {/* Gap row */}
@@ -306,9 +323,10 @@ function Dashboard({ week, allActuals }: { week: number, allActuals: WeeklyActua
                         <LineChart data={weeklyPerformance}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                             <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                            <YAxis axisLine={false} tickLine={false} />
+                            <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => value.toLocaleString()} />
                             <Tooltip
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                formatter={(value: any) => [value.toLocaleString(), "Value"]}
                             />
                             <Line type="monotone" dataKey="actual" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb' }} />
                             <Line type="monotone" dataKey="target" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
@@ -333,6 +351,7 @@ function Dashboard({ week, allActuals }: { week: number, allActuals: WeeklyActua
                             <Tooltip
                                 cursor={{ fill: '#f8fafc' }}
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                                formatter={(value: any) => [value.toLocaleString(), "Value"]}
                             />
                             <Bar dataKey="actual" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={20} />
                         </BarChart>
@@ -351,7 +370,7 @@ function Dashboard({ week, allActuals }: { week: number, allActuals: WeeklyActua
                     <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
                         <p className="text-sm font-medium text-blue-800">Total Progress</p>
                         <p className="text-2xl font-bold text-blue-900">
-                            {weeklyPerformance[week - 1]?.actual.toFixed(0) || 0} / {weeklyPerformance[week - 1]?.target.toFixed(0) || 0}
+                            {weeklyPerformance[week - 1]?.actual.toLocaleString() || 0} / {weeklyPerformance[week - 1]?.target.toLocaleString() || 0}
                         </p>
                     </div>
                     <div className="p-4 rounded-xl bg-purple-50 border border-purple-100">
