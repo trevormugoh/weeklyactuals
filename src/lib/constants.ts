@@ -24,7 +24,8 @@ export const KPI_DATA: KPI[] = [
       { name: "Western KE", target: 43 },
       { name: "Coastal KE", target: 64 },
       { name: "Northern TZ", target: 21 },
-      { name: "Northern UG", target: 5 },
+      { name: "Uganda", target: 5 },
+      { name: "Eastern KE", target: 5 },
     ],
   },
   {
@@ -38,7 +39,7 @@ export const KPI_DATA: KPI[] = [
       { name: "Western KE", target: 5 },
       { name: "Coastal KE", target: 14 },
       { name: "Northern TZ", target: 9 },
-      { name: "Northern UG", target: 5 },
+      { name: "Uganda", target: 5 },
     ],
   },
   {
